@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>Consumir API</title>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+	<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+</head>
+<body>
+	<div class="container pt-5"> 
+		<div class="row">
+			<div class="col-md-3"></div>
+			<div class="col-md-6">
+				<form>
+				  <div class="form-group">
+				    <label for="comunas">Comuna</label>
+				    <select name="comunas" id="comunas" class="form-control"></select>
+				  </div>
+				  <div class="form-group">
+				    <label for="Locales">Nombre del Local</label>
+				    <select name="locales" id="locales" class="form-control">
+				    	<option value="">Seleccionar ...</option>
+				    </select>
+				  </div>
+				  <input type="submit" class="btn btn-primary" value="Buscar">
+				</form>
+			</div>
+			<div class="col-md-3"></div>
+		</div>
+		<div class="row" id="elementos"></div>
+	</div>
+</body>
+</html>
+<script>
+	$(document).ready(function(){
+		
+		var baseURLAPI = window.location;
+
+		//carga las comunas 
+		$.get(baseURLAPI + "Leer.php/metodo/getRegionComuna", function( data ) {
+		  $("#comunas").html(data);
+		});
+
+		//carga los locales 
+		$("#comunas").change(function() {
+			var comunaid = this.value;
+
+			if(comunaid != "")
+			{
+				$("#locales option").remove();
+				$("#locales").append('<option value="">Seleccionar ...</option>');
+
+				$.get(baseURLAPI + "Leer.php/metodo/getLocal/comuna_id/"+comunaid, function(local) {
+				  $.each(local, function(i) {
+					$('#locales').append("<option value=\""+local[i].local_id+"\">"+local[i].nombre_local+"<\/option>");
+				  });
+				});
+			}
+		}); 
+
+		$("form").submit(function(event) {
+			event.preventDefault();
+
+			var comuna_id = $("#comunas").val();
+			var local = $("#locales").val();
+
+			if(comuna_id == "" && local == "")
+			{
+				alert("Debes ingresar la comuna y local") ;
+				return false;
+			}else{
+
+				var elementos = "";
+
+				$.get(baseURLAPI + "Leer.php/metodo/getFarmaciasTurno/comunaid/"+comuna_id+"/local/"+local+"", function(data) {
+				  $.each(data, function(i) {
+					elementos += "<div class='col-md-3'></div>";
+					elementos += "<div class='col-md-6 pt-3' style='background-color: silver'>";
+					elementos += "<p id='nombre_local'><span>Nombre Local : "+data[i].nombre_local+"</span></p>";
+					elementos += "<p id='direccion'><span>Dirección : "+data[i].direccion+"</span></p>";
+					elementos += "<p id='telefono'><span>Teléfono : "+data[i].telefono+"</span></p>";
+					elementos += "</div>";
+					elementos += "<div class='col-md-3'></div>";
+					//crea elementos html 
+					$("#elementos").html(elementos);
+				  });
+				});
+
+				
+			}
+		});
+	});
+</script>
